@@ -15,14 +15,14 @@ import ai.tripl.arc.api._
 import ai.tripl.arc.api.API._
 import ai.tripl.arc.util._
 
+//import ai.tripl.arc.util.TestUtils
+
 case class DLPUser(user_id: String, name: String, dob: String)
 
 class DLPTransformSuite extends FunSuite with BeforeAndAfter {
-  import spark.implicits._
 
   var session: SparkSession = _
   val port = 1080
-  val server = new Server(port)
   val inputView = "inputView"
   val outputView = "outputView"
 
@@ -43,6 +43,8 @@ class DLPTransformSuite extends FunSuite with BeforeAndAfter {
                   .getOrCreate()
     spark.sparkContext.setLogLevel("INFO")
 
+    import spark.implicits._
+
     // set for deterministic timezone
     spark.conf.set("spark.sql.session.timeZone", "UTC")
 
@@ -56,41 +58,34 @@ class DLPTransformSuite extends FunSuite with BeforeAndAfter {
 
   after {
     session.stop
-    try {
-      server.stop
-    } catch {
-      case e: Exception =>
-    }
   }
 
   test("DLPTransform: Can de-identify data") {
     implicit val spark = session
-    //import spark.implicits._
+    import spark.implicits._
     implicit val logger = TestUtils.getLogger()
     implicit val arcContext = TestUtils.getARCContext()
 
     (testProjectId, testRegion, testTemplateName) match {
-        case None =>
-            logger.warn("Skipping DLPTransform test as project id, region or template name not set")
         case (Some(projectId), Some(region), Some(templateName)) => {
             val df = userDF
             df.createOrReplaceTempView(inputView)
 
             val dlpStage = DLPTransformStage(
-                plugin: new DLPTransform,
-                id: None,
-                name: "dlpUserTransform",
-                description: None,
-                inputView: inputView,
-                outputView: outputView,
-                params: Map.empty,
-                persist: false,
-                batchSize: 10,
-                numPartitions: None,
-                partitionBy: Nil,
-                projectId: projectId,
-                region: region,
-                dlpTemplateName: templateName
+                plugin= new DLPTransform,
+                id= None,
+                name= "dlpUserTransform",
+                description= None,
+                inputView= inputView,
+                outputView= outputView,
+                params= Map.empty,
+                persist= false,
+                batchSize= 10,
+                numPartitions= None,
+                partitionBy= Nil,
+                projectId= projectId,
+                region= region,
+                dlpTemplateName= templateName
             ) 
 
             val dataset = DLPTransformStage.execute(dlpStage).get
@@ -102,20 +97,23 @@ class DLPTransformSuite extends FunSuite with BeforeAndAfter {
                 DLPUser("29591", "Alice Smith", "07/03/1982")
             ).toDF
 
-            println("User DF:")
-            userDF.show(false)
-            println("Expected: User DF:")
-            expectedUserDF.show(false)
-            println("Received DF:")
-            dataset.show(false)
+            //println("User DF:")
+            //userDF.show(false)
+            //println("Expected: User DF:")
+            //expectedUserDF.show(false)
+            //println("Received DF:")
+            //dataset.show(false)
 
             val expected = expectedUserDF.select(col("user_id"))
             val actual = dataset.select(col("user_id"))
 
             assert(TestUtils.datasetEquality(expected, actual))
         }
+        case _ =>
+            println("Skipping DLPTransform test as project id, region or template name not set")
     }
 
   }
+
 
 }

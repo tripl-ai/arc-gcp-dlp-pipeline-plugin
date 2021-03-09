@@ -1,4 +1,4 @@
-package ai.tripl.arc.transform
+package ai.tripl.arc.transform.gcp
 
 import java.net.URI
 
@@ -149,9 +149,9 @@ object DLPTransformStage {
 
     var transformedDF = try {
 
-      val dlp = DlpServiceClient.create()
 
       df.mapPartitions[TransformedRow] { partition: Iterator[Row] =>
+        val dlp = DlpServiceClient.create()
 
         // we are using a BufferedIterator so we can 'peek' at the first row to get column types without advancing the iterator
         // meaning we don't have to keep finding fieldIndex and dataType for each row (inefficient as they will not change)
@@ -177,7 +177,7 @@ object DLPTransformStage {
         }
 
         val contentItem = ContentItem.newBuilder().setTable(tableBuilder.build).build
-
+        
         val request = DeidentifyContentRequest.newBuilder()
                                             .setParent(LocationName.of(projectId, region).toString())
                                             .setItem(contentItem)
