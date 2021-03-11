@@ -57,8 +57,6 @@ val excludedOrgs = Seq(
 
 lazy val renamed = Seq(
   "android",
-  "avro.shaded",
-  "com.fasterxml",
   "com.google.common",
   "com.google.api",
   "com.google.auth",
@@ -69,6 +67,8 @@ lazy val renamed = Seq(
   "com.google.http-client",
   "com.google.geo",
   "com.google.gson",
+  "com.google.guava",
+  "com.google.http-client",
   "com.google.iam",
   "com.google.logging",
   "com.google.longrunning",
@@ -88,9 +88,9 @@ lazy val renamed = Seq(
   "io.codehaus.mojo",
   "org.aopalliance",
   "org.codehaus",
-  "com.google.cloud.datacatalog"
+  "com.google.cloud.dlp"
 )
-lazy val notRenamed = Seq(myPackage, "com.google.cloud.spark.bigquery")
+lazy val notRenamed = Seq(myPackage)
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
 
