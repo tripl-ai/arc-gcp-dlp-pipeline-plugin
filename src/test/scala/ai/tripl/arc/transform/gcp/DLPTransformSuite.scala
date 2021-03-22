@@ -17,7 +17,7 @@ import ai.tripl.arc.util._
 
 //import ai.tripl.arc.util.TestUtils
 
-case class DLPUser(user_id: String, name: String, dob: String)
+case class DLPUser(user_id: String, name: String, dob: java.time.LocalDate, created: java.sql.Timestamp, active: java.lang.Boolean, age: Int, height: Float)
 
 class DLPTransformSuite extends FunSuite with BeforeAndAfter {
 
@@ -51,8 +51,14 @@ class DLPTransformSuite extends FunSuite with BeforeAndAfter {
     session = spark
 
     userDF = Seq(
-        DLPUser("11111", "John Doe", "12/07/1994"),
-        DLPUser("22222", "Alice Smith", "07/03/1982")
+        DLPUser("11111", "John Doe",
+                  java.time.LocalDate.of(1994,7,12), 
+                  java.sql.Timestamp.valueOf(java.time.LocalDateTime.of(2021, 1, 15, 11, 32, 0)),
+                  true, 32, 183.5f),
+        DLPUser("22222", "Alice Smith",
+                  java.time.LocalDate.of(1982,3,7), 
+                  java.sql.Timestamp.valueOf(java.time.LocalDateTime.of(2020, 3, 5, 22,54, 12)),
+                  false, 12, 174.7f)
     ).toDF
   }
 
@@ -93,19 +99,25 @@ class DLPTransformSuite extends FunSuite with BeforeAndAfter {
             dataset.cache.count
 
             val expectedUserDF = Seq(
-                DLPUser("41479", "John Doe", "12/07/1994"),
-                DLPUser("29591", "Alice Smith", "07/03/1982")
+                DLPUser("41479", "cPHK0d9bFeIgoDejmrOUrDchpDapWnmrKPAIMr3ZPfY=",
+                          java.time.LocalDate.of(1994,4,28), 
+                          java.sql.Timestamp.valueOf(java.time.LocalDateTime.of(2021, 1, 15, 11, 32, 0)),
+                          true, 4, 2.0f),
+                DLPUser("29591", "jBZm7CxKLihqr4MTqabX7Do+1SJqeezeg00Mtbs6UeA=",
+                          java.time.LocalDate.of(1981,12,9), 
+                          java.sql.Timestamp.valueOf(java.time.LocalDateTime.of(2020, 3, 5, 22,54, 12)),
+                          false, 1, 1.0f)
             ).toDF
 
-            //println("User DF:")
-            //userDF.show(false)
-            //println("Expected: User DF:")
-            //expectedUserDF.show(false)
-            //println("Received DF:")
-            //dataset.show(false)
+            /*println("User DF:")
+            userDF.show(false)
+            println("Expected: User DF:")
+            expectedUserDF.show(false)
+            println("Received DF:")
+            dataset.show(false)*/
 
-            val expected = expectedUserDF.select(col("user_id"))
-            val actual = dataset.select(col("user_id"))
+            val expected = expectedUserDF.select($"user_id", $"name", $"dob", $"age", $"height")
+            val actual = dataset.select($"user_id", $"name", $"dob", $"age", $"height")
 
             assert(TestUtils.datasetEquality(expected, actual))
         }

@@ -255,6 +255,27 @@ object DLPTransformStage {
         f.dataType match {
             case StringType =>
                 rowBuilder.addValues(Value.newBuilder().setStringValue(row.getString(idx)).build())
+            case IntegerType =>
+                rowBuilder.addValues(Value.newBuilder().setIntegerValue(row.getInt(idx)).build())
+            case DateType =>
+                val localDate = row.getDate(idx).toLocalDate
+                val googleDate = com.google.`type`.Date.newBuilder()
+                                    .setDay(localDate.getDayOfMonth())
+                                    .setMonth(localDate.getMonthValue())
+                                    .setYear(localDate.getYear())
+                                    .build()
+                rowBuilder.addValues(Value.newBuilder().setDateValue(googleDate).build())
+            case TimestampType =>
+                val ts = row.getTimestamp(idx)
+                val seconds = ts.getTime() / 1000
+                val googleTimestamp = com.google.protobuf.Timestamp.newBuilder()
+                                          .setSeconds(seconds)
+                                          .build()
+                rowBuilder.addValues(Value.newBuilder().setTimestampValue(googleTimestamp).build())
+            case FloatType =>
+                rowBuilder.addValues(Value.newBuilder().setFloatValue(row.getFloat(idx)).build())
+            case BooleanType =>
+                rowBuilder.addValues(Value.newBuilder().setBooleanValue(row.getBoolean(idx)).build())
             case _ =>
         }
     }
@@ -270,6 +291,23 @@ object DLPTransformStage {
         f.dataType match {
             case StringType =>
                 buffer += value.getStringValue()
+            case IntegerType =>
+                buffer += value.getIntegerValue().toInt
+            case DateType =>
+                val googleDate = value.getDateValue()
+                val day = googleDate.getDay()
+                val month = googleDate.getMonth()
+                val year = googleDate.getYear()
+                val localDate = java.time.LocalDate.of(year, month, day)
+                buffer += java.sql.Date.valueOf(localDate)
+            case TimestampType =>
+                val googleTimestamp = value.getTimestampValue()
+                val ms = googleTimestamp.getSeconds() * 1000
+                buffer += new java.sql.Timestamp(ms)
+            case FloatType =>
+                buffer += value.getFloatValue().toFloat
+            case BooleanType =>
+                buffer += value.getBooleanValue()
             case _ =>
         }
     }
